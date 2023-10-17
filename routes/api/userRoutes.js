@@ -1,5 +1,6 @@
 const router = require('express').Router();
 // Require exports from USER CONTROLLER BELOW
+const { getUsers, createUser, getSingleUser, updateUser, deleteUser } = require('../../controllers/userController');
 
 // This can contain below AND MAYBE POST & DELETE to add and remove friend from users list?
 // Get ALL & Get One user

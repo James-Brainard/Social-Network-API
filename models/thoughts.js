@@ -1,4 +1,5 @@
 const { Schema, model } = require('mongoose');
+const { format_date } = require('../utils/helpers')
 
 const thoughtSchema = new Schema(
   {
@@ -10,17 +11,53 @@ const thoughtSchema = new Schema(
     createdAt: {
       type: Date,
       default: Date.now,
+      get: (date) => {
+        if (date) return date.format_date
+      }
       // Need Getter method to FORMAT TIMESTAMP on QUERY
     },
     userName: {
       type: String,
       required: true,
     },
-    reactions: {
-      // Array of nested documents created with the reactionSchema
+    reactions: [
+      reactionSchema
+        // Array of nested documents created with the reactionSchema
+    ]
+  }
+);
+
+const reactionSchema = new Schema(
+  {
+    reactionId: {
+      type: Schema.Types.ObjectId,
+      default: new ObjectId
+    },
+    reactionBody: {
+      type: String,
+      required: true,
+      maxLength: 280,
+    },
+    userName: {
+      type: String,
+      required: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      get: (date) => {
+        if (date) return date.format_date
+      }
+      // use a getter method to format the timestamp on query
     }
   }
 );
+
+thoughtSchema
+.virtual('reactionCount')
+.get(function () {
+  return this.reactions.length;
+})
 
 const Thoughts = model('Thoughts', thoughtSchema);
 
