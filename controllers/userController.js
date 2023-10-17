@@ -1,5 +1,6 @@
 // NEED ('/') GET getUsers & POST createUser
 // NEED ('/:userId) GET getSingleUser - PUT updateUser - DELETE deleteUser
+const { Thoughts } = require('../models');
 const User = require('../models/users');
 
 
@@ -21,7 +22,7 @@ module.exports = {
     try {
       const userData = await User.findOne({ _id: req.params.userId })
         .populate('thoughts')
-        .populate('friends')
+        .populate('friends');
 
       if (!userData) {
         return res.status(404).json({ message: 'No user with that ID was found.' })
@@ -33,7 +34,12 @@ module.exports = {
   },
   async createUser(req, res) {
     try {
-      const createUserData = await User.create(req.body);
+      const createUserData = await User.create(
+        { username: req.body.username, email: req.body.email }
+        );
+      if (!createUserData) {
+        res.status(404).json({ message: 'Could not create new user '})
+      }
       res.json(createUserData);
     } catch (err) {
       res.status(500).json(err);
@@ -59,10 +65,12 @@ module.exports = {
   },
   async deleteUser(req, res) {
     try {
-      const dbDeleteUser = await User.findOne({ _id: req.params.userId })
+      const dbDeleteUser = await User.deleteOne({ _id: req.params.userId })
+      const deleteUserThoughts = await Thoughts.deleteMany({_id: req.params.userId})
       if (!dbDeleteUser) {
-        return res.status(400).json({ message: 'No user with that ID was found.' })
+        return res.status(400).json({ message: 'No user with that ID was found.'})
       }
+      res.status(200).json({message: 'User successfully deleted.'})
     } catch (err) {
       res.status(500).json(err);
     }
