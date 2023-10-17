@@ -12,14 +12,15 @@ const userSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      validate: {
-        isEmail: true,
-      }
+      match: [
+        /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/,
+        'Please enter a valid email'
+      ]
     },
     thoughts: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'thought'
+        ref: 'thoughts'
       }
     ],
     friends: [
@@ -28,6 +29,11 @@ const userSchema = new Schema(
         ref: 'user'
       }
     ]
+  },
+  {
+    toJSON: {
+      virtuals: true,
+    }
   }
 );
 // Create a virtual called friendCount that retrieves the length of the user's friends array field on query.

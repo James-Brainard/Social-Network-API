@@ -24,6 +24,11 @@ const thoughtSchema = new Schema(
       reactionSchema
         // Array of nested documents created with the reactionSchema
     ]
+  },
+  {
+    toJSON: {
+      virtuals: true,
+    }
   }
 );
 
