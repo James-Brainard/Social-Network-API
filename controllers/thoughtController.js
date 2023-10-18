@@ -1,6 +1,6 @@
 // Need GET getThoughts - POST newThought
 // to /:thoughtId GET getSingleThought - PUT updateThought - DELETE deleteThought
-const { Thoughts, Users } = require('../models');
+const { Thoughts, User } = require('../models');
 
 module.exports = {
   async getThoughts(req, res) {
@@ -28,11 +28,13 @@ module.exports = {
   async newThought(req, res) {
     try {
       const dbNewThought = await Thoughts.create(req.body);
-      const updateUserThought = await Users.findOneAndUpdate(
-        { _id: req.body.userId },
+      const updateUserThought = await User.findOneAndUpdate(
+        { username: req.body.username },
         { $addToSet: { thoughts: dbNewThought._id } },
         { new: true }
       )
+        .populate('thoughts')
+        .populate('friends')
       if (!updateUserThought) {
         return res.status(404).json({ message: 'Could not update User with new Thought.' });
       }
@@ -43,11 +45,19 @@ module.exports = {
   },
   async deleteThought(req, res) {
     try {
-      const dbDeleteThought = await Thoughts.findOne({ _id: req.params.thoughtsId });
+      const dbDeleteThought = await Thoughts.findByIdAndDelete(req.params.thoughtsId);
 
+      const removeFromUser = await User.findOneAndUpdate(
+        { thoughts: req.params.thoughtId },
+        { $pull: { thoughts: req.params.thoughtId } },
+        { new: true }
+      )
+        .populate('thoughts')
+        .populate('friends')
       if (!dbDeleteThought) {
         return res.status(400).json({ message: 'No thought with that ID was found.' })
       }
+      res.json(dbDeleteThought);
     } catch (err) {
       res.status(500).json(err)
     }
@@ -87,15 +97,15 @@ module.exports = {
   async deleteReaction(req, res) {
     try {
       const deleteReaction = await Thoughts.findOneAndUpdate(
-        {_id: req.params.thoughtsId},
-        { $pull: { reactions: req.params.reactionId} },
-        { new: true, runValidators: true }
-        )
+        { _id: req.params.thoughtsId },
+        { $pull: { reactions: {reactionId: req.params.reactionId } } },
+        { new: true }
+      )
       if (!deleteReaction) {
-        res.status(400).json({message: 'No reaction with that id was found.'})
+        res.status(400).json({ message: 'No reaction with that id was found.' })
       }
       res.json(deleteReaction);
-    } catch(err) {
+    } catch (err) {
       res.status(500).json(err);
     }
   }

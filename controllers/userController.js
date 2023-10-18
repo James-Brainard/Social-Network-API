@@ -1,7 +1,7 @@
 // NEED ('/') GET getUsers & POST createUser
 // NEED ('/:userId) GET getSingleUser - PUT updateUser - DELETE deleteUser
-const { Thoughts } = require('../models');
-const User = require('../models/users');
+const { Thoughts, User } = require('../models');
+
 
 
 module.exports = {
@@ -51,22 +51,25 @@ module.exports = {
       const dbUserData = await User.findOneAndUpdate(
         { _id: req.params.userId },
         { $set: req.body },
-        { new: true}
+        { runValidators: true, new: true}
         )
-        .populate()
+        .populate('thoughts')
+        .populate('friends')
+        
       if (!dbUserData) {
         return res.status(400).json({ message: 'No user with that ID was found.' })
       }
-      User.reactions = reactions;
-      User.thoughts = thoughts;
+      res.json(dbUserData);
     } catch (err) {
       res.status(500).json(err);
     }
   },
   async deleteUser(req, res) {
     try {
+      const findDeleteUser = await User.findById(req.params.userId)
+      const deleteThoughts = await Thoughts.deleteMany({ username: findDeleteUser.username })
       const dbDeleteUser = await User.deleteOne({ _id: req.params.userId })
-      const deleteUserThoughts = await Thoughts.deleteMany({_id: req.params.userId})
+
       if (!dbDeleteUser) {
         return res.status(400).json({ message: 'No user with that ID was found.'})
       }
@@ -82,12 +85,12 @@ module.exports = {
         { $push: { friends: req.params.friendId } },
         { new: true }
         )
-        .populate('thoughts')
         .populate('friends')
+        .populate('thoughts')
       if (!addAFriend) {
         return res.status(404).json({ message: 'Could not Add friend, please try again.'})
       }
-      res.json(addAFriend);
+      res.status(200).json(addAFriend);
     } catch(err) {
       res.status(500).json(err);
     }

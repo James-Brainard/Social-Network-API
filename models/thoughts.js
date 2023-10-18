@@ -1,5 +1,5 @@
-const { Schema, model } = require('mongoose');
-const { format_date } = require('../utils/helpers')
+const { Schema, model, Types } = require('mongoose');
+const { format_date } = require('../utils/helpers');
 
 const reactionSchema = new Schema(
   {
@@ -12,18 +12,23 @@ const reactionSchema = new Schema(
       required: true,
       maxLength: 280,
     },
-    userName: {
+    username: {
       type: String,
       required: true,
     },
     createdAt: {
       type: Date,
       default: Date.now,
-      get: (date) => {
-        if (date) return date.format_date
-      }
+      get: value => format_date(value)
       // use a getter method to format the timestamp on query
-    }
+    },
+  },
+  {
+    toJSON: {
+      virtuals: true,
+      getters: true,
+    },
+    id: false
   }
 );
 
@@ -37,12 +42,10 @@ const thoughtSchema = new Schema(
     createdAt: {
       type: Date,
       default: Date.now,
-      get: (date) => {
-        if (date) return date.format_date
-      }
+      get: value => format_date(value)
       // Need Getter method to FORMAT TIMESTAMP on QUERY
     },
-    userName: {
+    username: {
       type: String,
       required: true,
     },
